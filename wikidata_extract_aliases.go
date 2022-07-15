@@ -161,7 +161,7 @@ func ExtractaliasesAndTypes() {
 			this_language_label := a.Labels[language].Value
 
 			interesting_for_relations_list := make([]string, 0, len(interesting_for_relations))
-			for relation, _ := range interesting_for_relations {
+			for relation := range interesting_for_relations {
 				interesting_for_relations_list = append(interesting_for_relations_list, relation)
 			}
 			// sorting is not strictly necessary, but guarantees consistency between runs and probably helps a bit making it compressable.
