@@ -32,6 +32,7 @@ type EntityInformation struct {
 	ForRelations []string `json:"r"`
 	MainLabel    string   `json:"l"`
 	Aliases      []string `json:"a"`
+	ClaimCount   int      `json:"c"`
 }
 
 func ExtractaliasesAndTypes() {
@@ -56,6 +57,7 @@ func ExtractaliasesAndTypes() {
 		"Q171558":    {"PersonCauseOfDeath"}, // accident
 		"Q43229":     {"PersonEmployer"},     // organization
 		"Q327333":    {"PersonEmployer"},     // government agency
+		"Q17505024":  {"PersonEmployer"},     //space agency e.g., NASA
 		"Q2659904":   {"PersonEmployer"},     // government organization
 		"Q2385804":   {"PersonEmployer"},     // educational institution
 		"Q3918":      {"PersonEmployer"},     // university
@@ -115,10 +117,6 @@ func ExtractaliasesAndTypes() {
 				log.Println("Now at entity ", counter)
 			}
 			counter++
-			if len(a.Aliases[language]) < 1 {
-				// we do not even bother checking anything else.
-				return nil
-			}
 
 			possibly_relevant_types := make([]mediawiki.Statement, 0)
 			possibly_relevant_types = append(possibly_relevant_types, a.Claims["P31"]...)
@@ -167,10 +165,13 @@ func ExtractaliasesAndTypes() {
 			// sorting is not strictly necessary, but guarantees consistency between runs and probably helps a bit making it compressable.
 			sort.Strings(interesting_for_relations_list)
 
+			number_of_claims := len(a.Claims)
+
 			info := EntityInformation{
 				ForRelations: interesting_for_relations_list,
 				MainLabel:    this_language_label,
 				Aliases:      this_language_aliases,
+				ClaimCount:   number_of_claims,
 			}
 			res, err := json.Marshal(info)
 			if err != nil {
