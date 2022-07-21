@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 
 	"github.com/hashicorp/go-retryablehttp"
 	"gitlab.com/tozd/go/errors"
@@ -84,8 +83,8 @@ func ExtractaliasesAndTypes() {
 		"Q16110":     {"StateSharesBorderState"}, // region of Italy
 		"Q261543":    {"StateSharesBorderState"}, // state of Austria
 		"Q200547":    {"StateSharesBorderState"}, // county of Sweden
-		"Q712378":    {"DEBUG"},
-		"Q331769":    {"DEBUG"},
+		//"Q712378":    {"DEBUG"},
+		//"Q331769":    {"DEBUG"},
 	}
 
 	client := retryablehttp.NewClient()
@@ -95,7 +94,7 @@ func ExtractaliasesAndTypes() {
 
 	curDir, _ := os.Getwd()
 	dumpPath := filepath.Join(curDir, dumpFile)
-	output, err := os.Create(filepath.Join(curDir, "aliases_classes.txt"))
+	output, err := os.Create(filepath.Join(curDir, "aliases.jsonl"))
 	if err != nil {
 		log.Panic(err)
 	}
@@ -180,56 +179,6 @@ func ExtractaliasesAndTypes() {
 
 			fmt.Fprintln(output, string(res))
 
-			return nil
-		},
-	)
-
-	if err_round1 != nil {
-		log.Panic("An error occured during the first pass ", err_round1)
-	}
-
-}
-
-func Extractaliases() {
-	client := retryablehttp.NewClient()
-	client.RequestLogHook = func(logger retryablehttp.Logger, req *http.Request, retry int) {
-		req.Header.Set("User-Agent", "Qualifier extraction for recommender")
-	}
-
-	curDir, _ := os.Getwd()
-	dumpPath := filepath.Join(curDir, dumpFile)
-	output, err := os.Create(filepath.Join(curDir, "aliases.txt"))
-	if err != nil {
-		log.Panic(err)
-	}
-	defer output.Close()
-
-	counter := 0
-
-	err_round1 := mediawiki.ProcessWikidataDump(
-		context.Background(),
-		&mediawiki.ProcessDumpConfig{
-			// URL:                    wikidataTestDump,
-			Path:                   dumpPath,
-			Client:                 client,
-			ItemsProcessingThreads: 1,
-		},
-		func(_ context.Context, a mediawiki.Entity) errors.E {
-			this_language_label := a.Labels[language].Value
-			this_language_aliases := make([]string, 0, len(a.Aliases[language]))
-			for _, alias := range a.Aliases[language] {
-				this_language_aliases = append(this_language_aliases, alias.Value)
-			}
-			this_language_all_labels := make([]string, 0, len(this_language_aliases)+1)
-			this_language_all_labels = append(this_language_all_labels, this_language_label)
-			this_language_all_labels = append(this_language_all_labels, this_language_aliases...)
-
-			fmt.Fprintln(output, strings.Join(this_language_all_labels, "|"))
-
-			counter++
-			if counter%100000 == 0 {
-				log.Println("Now at entity ", counter)
-			}
 			return nil
 		},
 	)
